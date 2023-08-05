@@ -482,6 +482,19 @@ defmodule TeslaMate.Vehicles.Vehicle do
         Logger.warning("Received stale stream data: #{inspect(stream_data)}", car_id: data.car.id)
         :keep_state_and_data
 
+      # 检测驻车状态
+      %Stream.Data{shift_state: shift_state} when shift_state in ~w(P) ->
+        Logger.info("车辆已驻车", car_id: data.car.id)
+        current_time = DateTime.utc_now()
+        vehicle = merge(data.last_response, stream_data, time: true)
+        if vehicle.charge_state.battery_level > 25 and
+          not vehicle.charge_state.charging_state == "Charging" and
+          current_time.hour >= 22 do
+            Logger.warning("需要充电...")
+            #IO.puts "需要充电"
+        end
+        :keep_state_and_data # 保持当前状态和数据，或根据需要更改
+
       %Stream.Data{shift_state: shift_state} when shift_state in ~w(D N R) ->
         Logger.info("Start of drive initiated by: #{inspect(stream_data)}")
 
@@ -1158,6 +1171,16 @@ defmodule TeslaMate.Vehicles.Vehicle do
       current_time.hour >= 22 do
         Logger.warning("需要充电...")
         #IO.puts "需要充电"
+    end
+  end
+
+  def handle_vehicle_status(vehicle) do
+    case vehicle.drive_state.parking_state do
+      :parked ->
+        IO.puts "车辆已驻车"
+
+      _ ->
+        # 处理其他状态
     end
   end
 
