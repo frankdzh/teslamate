@@ -512,8 +512,8 @@ defmodule TeslaMate.Vehicles.Vehicle do
   end
 
   def handle_event(:info, {_ref, {state, %Vehicle{}} = event}, {:suspended, _}, data)
-    Logger.warning("test log018...")
       when state in [:asleep, :offline] do
+    Logger.warning("test log018...")
     {:next_state, :start, data, {:next_event, :internal, {:update, event}}}
   end
 
