@@ -1099,28 +1099,45 @@ defmodule TeslaMate.Vehicles.Vehicle do
   end
 
   #### :asleep / :offline
+  # 在文件的适当位置插入新的函数
+  defp check_battery_and_time(vehicle) do
+    current_time = DateTime.utc_now()
+    if vehicle.charge_state.battery_level > 25 and
+      not vehicle.charge_state.charging_state == "Charging" and
+      current_time.hour >= 22 do
+        Logger.warning("需要充电...")
+        #IO.puts "需要充电"
+    end
+  end
 
-  def handle_event(:internal, {:update, {state, _}}, {state, @asleep_interval}, data)
+  def handle_event(:internal, {:update, {state, vehicle}}docker, {state, @asleep_interval}, data)
       when state in [:asleep, :offline] do
+    # 在更新状态后检查电池和时间
+    Logger.warning("test log1...")
+    check_battery_and_time(vehicle)
     {:keep_state_and_data, [schedule_fetch(@asleep_interval, data), broadcast_summary()]}
   end
 
   def handle_event(:internal, {:update, {state, _}}, {state, interval}, data)
       when state in [:asleep, :offline] do
+    Logger.warning("test log2...")
     {:next_state, {state, min(interval * 2, @asleep_interval)}, data,
      schedule_fetch(interval, data)}
   end
 
   def handle_event(:internal, {:update, {:offline, _}}, {:asleep, _interval}, data) do
+    Logger.warning("test log3...")
     {:next_state, :start, data, schedule_fetch(data)}
   end
 
   def handle_event(:internal, {:update, {:asleep, _}}, {:offline, _interval}, data) do
+    Logger.warning("test log4...")
     {:next_state, :start, data, schedule_fetch(data)}
   end
 
   def handle_event(:internal, {:update, {:online, _}} = event, {state, _interval}, data)
       when state in [:asleep, :offline] do
+    Logger.warning("test log5...")
     {:next_state, :start, %Data{data | last_used: DateTime.utc_now()},
      {:next_event, :internal, event}}
   end
