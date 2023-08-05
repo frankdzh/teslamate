@@ -483,7 +483,9 @@ defmodule TeslaMate.Vehicles.Vehicle do
         :keep_state_and_data
 
       # 检测驻车状态
-      %Stream.Data{shift_state: shift_state} when shift_state in ~w(P) ->
+      #%Stream.Data{shift_state: shift_state} when shift_state in ~w(P) ->
+      Logger.info("检测车辆是否驻车 ?", car_id: data.car.id)
+      %Stream.Data{shift_state: "P"} ->
         Logger.info("车辆已驻车", car_id: data.car.id)
         current_time = DateTime.utc_now()
         vehicle = merge(data.last_response, stream_data, time: true)
